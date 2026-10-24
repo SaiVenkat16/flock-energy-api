@@ -8,6 +8,7 @@ A high-performance, strongly-typed, and modern REST API proxy layer built on top
 * **Protocol & Reverse-Engineering Findings:** [PROTOCOL.md](file:///c:/Users/SaiVe/Desktop/flock-energy-api/PROTOCOL.md)
 * **OpenAPI 3.0 Specification:** [openapi.json](file:///c:/Users/SaiVe/Desktop/flock-energy-api/openapi.json)
 * **Engineering Reflections & Self-Critique:** [REFLECTION.md](file:///c:/Users/SaiVe/Desktop/flock-energy-api/REFLECTION.md)
+* **Interactive Modern Dashboard:** [http://localhost:8000/dashboard](http://localhost:8000/dashboard) (or [http://localhost:8000/](http://localhost:8000/))
 * **Interactive Documentation (when running):** [http://localhost:8000/docs](http://localhost:8000/docs)
 
 ---
