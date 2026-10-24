@@ -119,6 +119,9 @@ DASHBOARD_HTML = """<!DOCTYPE html>
             <option value="three">Three Phase</option>
           </select>
           <button id="btn-apply-filter" class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-medium transition">Filter</button>
+          <button id="btn-export-csv" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-medium transition flex items-center gap-1.5">
+            <span>📥 Export CSV</span>
+          </button>
         </div>
       </div>
 
@@ -210,8 +213,24 @@ DASHBOARD_HTML = """<!DOCTYPE html>
 
       // Bind events
       document.getElementById('btn-apply-filter').addEventListener('click', () => loadMetersTable(1));
+      document.getElementById('btn-export-csv').addEventListener('click', exportCSV);
       document.getElementById('btn-prev').addEventListener('click', () => { if (currentPage > 1) loadMetersTable(currentPage - 1); });
       document.getElementById('btn-next').addEventListener('click', () => loadMetersTable(currentPage + 1));
+    }
+
+    function exportCSV() {
+      const q = document.getElementById('filter-search').value.trim();
+      const make = document.getElementById('filter-make').value;
+      const status = document.getElementById('filter-status').value;
+      const phase = document.getElementById('filter-phase').value;
+
+      let url = '/api/v1/meters/export/csv?';
+      const params = [];
+      if (q) params.push(`q=${encodeURIComponent(q)}`);
+      if (make) params.push(`make=${encodeURIComponent(make)}`);
+      if (status) params.push(`install_status=${encodeURIComponent(status)}`);
+      if (phase) params.push(`phase_type=${encodeURIComponent(phase)}`);
+      window.location.href = url + params.join('&');
     }
 
     async function loadMetricsAndPins() {

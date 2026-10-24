@@ -574,6 +574,224 @@
           }
         }
       }
+    },
+    "/api/v1/meters/{meter_id}/health": {
+      "get": {
+        "tags": [
+          "Analytics"
+        ],
+        "summary": "Get Meter Health",
+        "operationId": "get_meter_health_api_v1_meters__meter_id__health_get",
+        "parameters": [
+          {
+            "name": "meter_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "Unique meter identifier",
+              "title": "Meter Id"
+            },
+            "description": "Unique meter identifier"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeterHealthReport"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/transformers/{dt_code}/summary": {
+      "get": {
+        "tags": [
+          "Analytics"
+        ],
+        "summary": "Get Transformer Summary",
+        "operationId": "get_transformer_summary_api_v1_transformers__dt_code__summary_get",
+        "parameters": [
+          {
+            "name": "dt_code",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "description": "DT code (e.g. DT-001)",
+              "title": "Dt Code"
+            },
+            "description": "DT code (e.g. DT-001)"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransformerLoadSummary"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/meters/export/csv": {
+      "get": {
+        "tags": [
+          "Meters"
+        ],
+        "summary": "Export Meters Csv",
+        "operationId": "export_meters_csv_api_v1_meters_export_csv_get",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          },
+          {
+            "name": "make",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Make"
+            }
+          },
+          {
+            "name": "phase_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Phase Type"
+            }
+          },
+          {
+            "name": "install_status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Install Status"
+            }
+          },
+          {
+            "name": "dt_code",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Dt Code"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/analytics/grid-overview": {
+      "get": {
+        "tags": [
+          "Analytics"
+        ],
+        "summary": "Get Grid Overview",
+        "operationId": "get_grid_overview_api_v1_analytics_grid_overview_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
     }
   },
   "components": {
@@ -885,6 +1103,84 @@
         ],
         "title": "MeterGeo"
       },
+      "MeterHealthReport": {
+        "properties": {
+          "meter_id": {
+            "type": "string",
+            "title": "Meter Id"
+          },
+          "health_score": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 0.0,
+            "title": "Health Score",
+            "description": "Overall health score 0-100"
+          },
+          "status_level": {
+            "type": "string",
+            "title": "Status Level",
+            "description": "OPTIMAL, WARNING, or CRITICAL"
+          },
+          "nominal_voltage_v": {
+            "type": "number",
+            "title": "Nominal Voltage V",
+            "default": 230.0
+          },
+          "voltage_anomalies_count": {
+            "type": "integer",
+            "title": "Voltage Anomalies Count"
+          },
+          "min_voltage_v": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Min Voltage V"
+          },
+          "max_voltage_v": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Max Voltage V"
+          },
+          "avg_voltage_v": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Avg Voltage V"
+          },
+          "recommendations": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Recommendations"
+          }
+        },
+        "type": "object",
+        "required": [
+          "meter_id",
+          "health_score",
+          "status_level",
+          "voltage_anomalies_count",
+          "recommendations"
+        ],
+        "title": "MeterHealthReport"
+      },
       "MeterHierarchy": {
         "properties": {
           "zone": {
@@ -1091,6 +1387,88 @@
           "data"
         ],
         "title": "PaginatedResponse[TransformerSummary]"
+      },
+      "TransformerLoadSummary": {
+        "properties": {
+          "dt_code": {
+            "type": "string",
+            "title": "Dt Code"
+          },
+          "dt_name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dt Name"
+          },
+          "capacity_kva": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Capacity Kva"
+          },
+          "feeder_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Feeder Code"
+          },
+          "connected_meters_count": {
+            "type": "integer",
+            "title": "Connected Meters Count"
+          },
+          "installed_meters_count": {
+            "type": "integer",
+            "title": "Installed Meters Count"
+          },
+          "faulty_meters_count": {
+            "type": "integer",
+            "title": "Faulty Meters Count"
+          },
+          "decommissioned_meters_count": {
+            "type": "integer",
+            "title": "Decommissioned Meters Count"
+          },
+          "fault_ratio_percent": {
+            "type": "number",
+            "title": "Fault Ratio Percent"
+          },
+          "grid_risk_level": {
+            "type": "string",
+            "title": "Grid Risk Level",
+            "description": "LOW, MODERATE, or HIGH"
+          },
+          "recommended_action": {
+            "type": "string",
+            "title": "Recommended Action"
+          }
+        },
+        "type": "object",
+        "required": [
+          "dt_code",
+          "connected_meters_count",
+          "installed_meters_count",
+          "faulty_meters_count",
+          "decommissioned_meters_count",
+          "fault_ratio_percent",
+          "grid_risk_level",
+          "recommended_action"
+        ],
+        "title": "TransformerLoadSummary"
       },
       "TransformerSummary": {
         "properties": {

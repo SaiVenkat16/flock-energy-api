@@ -1,13 +1,19 @@
+import io
+import csv
 import math
 from contextlib import asynccontextmanager
 from typing import Optional, List
-from fastapi import FastAPI, HTTPException, Query, Path, BackgroundTasks
+from fastapi import FastAPI, HTTPException, Query, Path, BackgroundTasks, Response
 from fastapi.responses import HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.client import UrjaPortalClient
 from app.cache import store
 from app.dashboard import DASHBOARD_HTML
+from app.analytics import (
+    analyze_meter_health, analyze_transformer_load,
+    MeterHealthReport, TransformerLoadSummary
+)
 from app.models import (
     MeterDetail, MeterGeo, EnergyConsumptionResponse,
     TransformerSummary, NearbyMeter, PaginatedResponse, HealthResponse
@@ -171,3 +177,102 @@ async def get_network_hierarchy():
     if store.is_stale:
         await store.sync(portal_client)
     return store.index.build_hierarchy_tree()
+
+@app.get("/api/v1/meters/{meter_id}/health", response_model=MeterHealthReport, tags=["Analytics"])
+async def get_meter_health(meter_id: str = Path(..., description="Unique meter identifier")):
+    if store.is_stale:
+        await store.sync(portal_client)
+
+    meter = store.index.get_meter(meter_id)
+    if not meter:
+        raise HTTPException(status_code=404, detail=f"Meter '{meter_id}' not found.")
+
+    try:
+        cons = await portal_client.fetch_meter_energy(meter_id)
+        readings = cons.readings
+    except Exception:
+        readings = []
+
+    return analyze_meter_health(meter, readings)
+
+@app.get("/api/v1/transformers/{dt_code}/summary", response_model=TransformerLoadSummary, tags=["Analytics"])
+async def get_transformer_summary(dt_code: str = Path(..., description="DT code (e.g. DT-001)")):
+    if store.is_stale:
+        await store.sync(portal_client)
+
+    dt_obj = store.index._transformers.get(dt_code)
+    connected = [m for m in store.index._meters.values() if m.dt_code == dt_code]
+    if not dt_obj and not connected:
+        raise HTTPException(status_code=404, detail=f"Transformer '{dt_code}' not found.")
+
+    return analyze_transformer_load(dt_obj, dt_code, connected)
+
+@app.get("/api/v1/meters/export/csv", tags=["Meters"])
+async def export_meters_csv(
+    q: Optional[str] = Query(None),
+    make: Optional[str] = Query(None),
+    phase_type: Optional[str] = Query(None),
+    install_status: Optional[str] = Query(None),
+    dt_code: Optional[str] = Query(None)
+):
+    if store.is_stale:
+        await store.sync(portal_client)
+
+    meters = store.index.search_and_filter(
+        q=q, make=make, phase_type=phase_type,
+        install_status=install_status, dt_code=dt_code
+    )
+
+    output = io.StringIO()
+    writer = csv.writer(output)
+    writer.writerow([
+        "Meter ID", "Serial Number", "Make", "Phase", "Status",
+        "DT Code", "Build", "Latitude", "Longitude", "Zone", "Circle", "Feeder"
+    ])
+
+    for m in meters:
+        lat = m.geo.latitude if m.geo else ""
+        lng = m.geo.longitude if m.geo else ""
+        z = m.hierarchy.zone.name if m.hierarchy and m.hierarchy.zone else ""
+        c = m.hierarchy.circle.name if m.hierarchy and m.hierarchy.circle else ""
+        f = m.hierarchy.feeder.name if m.hierarchy and m.hierarchy.feeder else ""
+        writer.writerow([
+            m.meter_id, m.serial_no, m.make, m.phase_type, m.install_status,
+            m.dt_code or "", m.build or "", lat, lng, z, c, f
+        ])
+
+    csv_data = output.getvalue()
+    return Response(
+        content=csv_data,
+        media_type="text/csv",
+        headers={"Content-Disposition": "attachment; filename=urja-meters-export.csv"}
+    )
+
+@app.get("/api/v1/analytics/grid-overview", tags=["Analytics"])
+async def get_grid_overview():
+    if store.is_stale:
+        await store.sync(portal_client)
+
+    all_meters = list(store.index._meters.values())
+    total = len(all_meters)
+
+    by_status = {}
+    by_make = {}
+    by_phase = {}
+    by_dt = {}
+
+    for m in all_meters:
+        by_status[m.install_status] = by_status.get(m.install_status, 0) + 1
+        by_make[m.make] = by_make.get(m.make, 0) + 1
+        by_phase[m.phase_type] = by_phase.get(m.phase_type, 0) + 1
+        if m.dt_code:
+            by_dt[m.dt_code] = by_dt.get(m.dt_code, 0) + 1
+
+    return {
+        "total_meters": total,
+        "total_distribution_transformers": len(store.index._transformers),
+        "status_breakdown": by_status,
+        "manufacturer_breakdown": by_make,
+        "phase_breakdown": by_phase,
+        "meters_per_dt": by_dt
+    }

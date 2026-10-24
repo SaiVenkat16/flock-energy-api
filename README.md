@@ -43,6 +43,11 @@ flowchart LR
      `Zone` → `Circle` → `Division` → `Subdivision` → `Substation` → `Feeder` → `Distribution Transformer (DT)` → `Meters`.
 6. **High-Speed Cryptographic Bulk Extraction:**
    - Discovered and implemented the HMAC-SHA256 signature algorithm against `/portal/keys` and `/portal/export?page=1` to hydrate all 403 meters in a single HTTP transaction.
+7. **Utility Domain Analytics & Health Scoring (Standout Features):**
+   - **Meter Health Engine (`/api/v1/meters/{id}/health`):** Evaluates Indian Grid Code statutory voltage bounds (216V–244V), detects severe under/over-voltage anomalies, and outputs an actionable 0–100 health score with crew recommendations.
+   - **Transformer Risk Profiler (`/api/v1/transformers/{code}/summary`):** Analyzes connected meter fault ratios against DT capacity to identify overload and high-risk feeders.
+   - **Field Team CSV Export (`/api/v1/meters/export/csv`):** Enables operations crews to export filtered meter lists with coordinates directly to spreadsheet formats.
+   - **Interactive Modern Dashboard (`/dashboard`):** Real-time Leaflet map of all 403 meters, Chart.js 30-min voltage/kWh graphs, and 1-click CSV export.
 
 ---
 
@@ -102,6 +107,11 @@ cp .env.example .env
 
 # 5. Start the REST API server
 uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+```
+
+### Option B: Run with Docker Compose (Zero Configuration)
+```bash
+docker compose up --build
 ```
 
 The server will automatically perform an initial sync on startup. Visit:

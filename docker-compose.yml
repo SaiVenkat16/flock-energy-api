@@ -1,0 +1,12 @@
+services:
+  api:
+    build: .
+    container_name: flock-energy-api
+    ports:
+      - "8000:8000"
+    environment:
+      - PORTAL_BASE_URL=https://urja-ops.flockenergy.tech
+      - PORTAL_USERNAME=operator@urja.local
+      - PORTAL_PASSWORD=urja-ops-2026
+      - CACHE_TTL_SECONDS=300
+    restart: unless-stopped
