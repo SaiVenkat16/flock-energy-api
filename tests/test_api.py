@@ -95,3 +95,8 @@ def test_hierarchy_tree_endpoint():
     assert resp.status_code == 200
     data = resp.json()
     assert "Jaipur Zone 1" in data
+
+def test_dashboard_endpoint():
+    resp = client.get("/dashboard")
+    assert resp.status_code == 200
+    assert "Urja Smart Meter Ops Dashboard" in resp.text

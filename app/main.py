@@ -2,10 +2,12 @@ import math
 from contextlib import asynccontextmanager
 from typing import Optional, List
 from fastapi import FastAPI, HTTPException, Query, Path, BackgroundTasks
+from fastapi.responses import HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.client import UrjaPortalClient
 from app.cache import store
+from app.dashboard import DASHBOARD_HTML
 from app.models import (
     MeterDetail, MeterGeo, EnergyConsumptionResponse,
     TransformerSummary, NearbyMeter, PaginatedResponse, HealthResponse
@@ -38,6 +40,11 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.get("/", response_class=HTMLResponse, include_in_schema=False)
+@app.get("/dashboard", response_class=HTMLResponse, tags=["Dashboard"])
+async def serve_dashboard():
+    return DASHBOARD_HTML
 
 @app.get("/api/v1/health", response_model=HealthResponse, tags=["System"])
 async def health_check():
