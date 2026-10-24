@@ -10,6 +10,8 @@ DASHBOARD_HTML = """<!DOCTYPE html>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <style>
     #map { height: 420px; border-radius: 0.75rem; }
+    .leaflet-tile { filter: brightness(0.6) invert(1) contrast(3) hue-rotate(200deg) saturate(0.3) brightness(0.7); }
+    .leaflet-container { background: #0f172a !important; }
   </style>
 </head>
 <body class="bg-slate-900 text-slate-100 min-h-screen">
@@ -162,10 +164,11 @@ DASHBOARD_HTML = """<!DOCTYPE html>
     let markersLayer = L.layerGroup();
 
     async function initDashboard() {
-      // 1. Initialize Map
+      // 1. Initialize Map with standard OpenStreetMap (No API key needed)
       map = L.map('map').setView([26.9124, 75.7873], 12);
-      L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-        attribution: '&copy; OpenStreetMap'
+      L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '&copy; OpenStreetMap contributors'
       }).addTo(map);
       markersLayer.addTo(map);
 
@@ -235,43 +238,46 @@ DASHBOARD_HTML = """<!DOCTYPE html>
 
     async function loadMetricsAndPins() {
       try {
-        const res = await fetch('/api/v1/meters?page_size=100');
-        const firstBatch = await res.json();
-        const total = firstBatch.total;
-        document.getElementById('kpi-total').textContent = total;
+        // 1. Fetch grid overview metrics for instant KPI cards
+        const overviewRes = await fetch('/api/v1/analytics/grid-overview');
+        if (overviewRes.ok) {
+          const overview = await overviewRes.json();
+          document.getElementById('kpi-total').textContent = overview.total_meters;
+          document.getElementById('kpi-installed').textContent = overview.status_breakdown.Installed || 0;
+          document.getElementById('kpi-faulty').textContent = overview.status_breakdown.Faulty || 0;
+          document.getElementById('kpi-decom').textContent = overview.status_breakdown.Decommissioned || 0;
+        }
 
-        // Fetch all meters to plot pins
-        const allRes = await fetch(`/api/v1/meters?page_size=${total}`);
-        const allData = await allRes.json();
-        
-        let installed = 0, faulty = 0, decom = 0;
-        markersLayer.clearLayers();
+        // 2. Fetch lightweight map pins for all 403 meters
+        const pinsRes = await fetch('/api/v1/meters/map-pins');
+        if (pinsRes.ok) {
+          const pins = await pinsRes.json();
+          markersLayer.clearLayers();
+          const latLngs = [];
 
-        allData.data.forEach(m => {
-          if (m.install_status === 'Installed') installed++;
-          else if (m.install_status === 'Faulty') faulty++;
-          else if (m.install_status === 'Decommissioned') decom++;
+          pins.forEach(m => {
+            if (m.lat && m.lng) {
+              const color = m.status === 'Installed' ? '#10b981' : (m.status === 'Faulty' ? '#f43f5e' : '#f59e0b');
+              const circle = L.circleMarker([m.lat, m.lng], {
+                radius: 5,
+                fillColor: color,
+                color: '#0f172a',
+                weight: 1,
+                opacity: 1,
+                fillOpacity: 0.85
+              });
+              circle.bindPopup(`<b>Meter: ${m.meter_id}</b><br/>Serial: ${m.serial_no}<br/>Make: ${m.make}<br/>Status: ${m.status}<br/>DT: ${m.dt_code || '—'}<br/><button onclick="loadMeterConsumption('${m.meter_id}')" class="mt-1 text-emerald-400 underline font-semibold">View Readings</button>`);
+              markersLayer.addLayer(circle);
+              latLngs.push([m.lat, m.lng]);
+            }
+          });
 
-          if (m.geo && m.geo.latitude && m.geo.longitude) {
-            const color = m.install_status === 'Installed' ? '#10b981' : (m.install_status === 'Faulty' ? '#f43f5e' : '#f59e0b');
-            const circle = L.circleMarker([m.geo.latitude, m.geo.longitude], {
-              radius: 5,
-              fillColor: color,
-              color: '#0f172a',
-              weight: 1,
-              opacity: 1,
-              fillOpacity: 0.85
-            });
-            circle.bindPopup(`<b>Meter: ${m.meter_id}</b><br/>Serial: ${m.serial_no}<br/>Make: ${m.make}<br/>Status: ${m.install_status}<br/><button onclick="loadMeterConsumption('${m.meter_id}')" class="mt-1 text-emerald-400 underline">View Readings</button>`);
-            markersLayer.addLayer(circle);
+          if (latLngs.length > 0) {
+            map.fitBounds(L.latLngBounds(latLngs).pad(0.05));
           }
-        });
-
-        document.getElementById('kpi-installed').textContent = installed;
-        document.getElementById('kpi-faulty').textContent = faulty;
-        document.getElementById('kpi-decom').textContent = decom;
+        }
       } catch (err) {
-        console.error('Error loading metrics:', err);
+        console.error('Error loading metrics & pins:', err);
       }
     }
 

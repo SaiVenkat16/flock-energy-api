@@ -78,6 +78,25 @@ async def get_nearby_meters(
         await store.sync(portal_client)
     return store.index.find_nearby(target_lat=lat, target_lng=lng, radius_km=radius_km, limit=limit)
 
+@app.get("/api/v1/meters/map-pins", tags=["Meters"])
+async def get_meter_map_pins():
+    if store.is_stale:
+        await store.sync(portal_client)
+    return [
+        {
+            "meter_id": m.meter_id,
+            "serial_no": m.serial_no,
+            "make": m.make,
+            "phase_type": m.phase_type,
+            "status": m.install_status,
+            "dt_code": m.dt_code,
+            "lat": m.geo.latitude,
+            "lng": m.geo.longitude
+        }
+        for m in store.index._meters.values()
+        if m.geo and m.geo.latitude and m.geo.longitude
+    ]
+
 @app.get("/api/v1/meters", response_model=PaginatedResponse[MeterDetail], tags=["Meters"])
 async def list_meters(
     q: Optional[str] = Query(None, description="Search meter ID or serial number"),
@@ -90,7 +109,7 @@ async def list_meters(
     sort_by: str = Query("meter_id", description="Field to sort by"),
     sort_order: str = Query("asc", description="Sort direction (asc, desc)"),
     page: int = Query(1, ge=1, description="Page number"),
-    page_size: int = Query(20, ge=1, le=100, description="Items per page")
+    page_size: int = Query(20, ge=1, le=500, description="Items per page")
 ):
     if store.is_stale:
         await store.sync(portal_client)
