@@ -6,154 +6,6 @@
     "version": "1.0.0"
   },
   "paths": {
-    "/dashboard": {
-      "get": {
-        "tags": [
-          "Dashboard"
-        ],
-        "summary": "Serve Dashboard",
-        "operationId": "serve_dashboard_dashboard_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "text/html": {
-                "schema": {
-                  "type": "string"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/health": {
-      "get": {
-        "tags": [
-          "System"
-        ],
-        "summary": "Health Check",
-        "operationId": "health_check_api_v1_health_get",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HealthResponse"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/sync": {
-      "post": {
-        "tags": [
-          "System"
-        ],
-        "summary": "Trigger Sync",
-        "operationId": "trigger_sync_api_v1_sync_post",
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {}
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/v1/meters/nearby": {
-      "get": {
-        "tags": [
-          "Spatial Query"
-        ],
-        "summary": "Get Nearby Meters",
-        "operationId": "get_nearby_meters_api_v1_meters_nearby_get",
-        "parameters": [
-          {
-            "name": "lat",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "number",
-              "description": "Target latitude in decimal degrees",
-              "title": "Lat"
-            },
-            "description": "Target latitude in decimal degrees"
-          },
-          {
-            "name": "lng",
-            "in": "query",
-            "required": true,
-            "schema": {
-              "type": "number",
-              "description": "Target longitude in decimal degrees",
-              "title": "Lng"
-            },
-            "description": "Target longitude in decimal degrees"
-          },
-          {
-            "name": "radius_km",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "number",
-              "maximum": 50.0,
-              "minimum": 0.1,
-              "description": "Search radius in kilometers",
-              "default": 5.0,
-              "title": "Radius Km"
-            },
-            "description": "Search radius in kilometers"
-          },
-          {
-            "name": "limit",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "type": "integer",
-              "maximum": 200,
-              "minimum": 1,
-              "description": "Max meters to return",
-              "default": 50,
-              "title": "Limit"
-            },
-            "description": "Max meters to return"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Successful Response",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/NearbyMeter"
-                  },
-                  "title": "Response Get Nearby Meters Api V1 Meters Nearby Get"
-                }
-              }
-            }
-          },
-          "422": {
-            "description": "Validation Error",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
     "/api/v1/meters": {
       "get": {
         "tags": [
@@ -331,7 +183,7 @@
             "required": false,
             "schema": {
               "type": "integer",
-              "maximum": 100,
+              "maximum": 500,
               "minimum": 1,
               "description": "Items per page",
               "default": 20,
@@ -348,6 +200,224 @@
                 "schema": {
                   "$ref": "#/components/schemas/PaginatedResponse_MeterDetail_"
                 }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/meters/nearby": {
+      "get": {
+        "tags": [
+          "Meters",
+          "Spatial Query"
+        ],
+        "summary": "Get Nearby Meters",
+        "operationId": "get_nearby_meters_api_v1_meters_nearby_get",
+        "parameters": [
+          {
+            "name": "lat",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "description": "Target latitude in decimal degrees",
+              "title": "Lat"
+            },
+            "description": "Target latitude in decimal degrees"
+          },
+          {
+            "name": "lng",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "number",
+              "description": "Target longitude in decimal degrees",
+              "title": "Lng"
+            },
+            "description": "Target longitude in decimal degrees"
+          },
+          {
+            "name": "radius_km",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "number",
+              "maximum": 50.0,
+              "minimum": 0.1,
+              "description": "Search radius in kilometers",
+              "default": 5.0,
+              "title": "Radius Km"
+            },
+            "description": "Search radius in kilometers"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "description": "Max meters to return",
+              "default": 50,
+              "title": "Limit"
+            },
+            "description": "Max meters to return"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/NearbyMeter"
+                  },
+                  "title": "Response Get Nearby Meters Api V1 Meters Nearby Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/meters/map-pins": {
+      "get": {
+        "tags": [
+          "Meters"
+        ],
+        "summary": "Get Meter Map Pins",
+        "operationId": "get_meter_map_pins_api_v1_meters_map_pins_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/meters/export/csv": {
+      "get": {
+        "tags": [
+          "Meters"
+        ],
+        "summary": "Export Meters Csv",
+        "operationId": "export_meters_csv_api_v1_meters_export_csv_get",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          },
+          {
+            "name": "make",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Make"
+            }
+          },
+          {
+            "name": "phase_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Phase Type"
+            }
+          },
+          {
+            "name": "install_status",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Install Status"
+            }
+          },
+          {
+            "name": "dt_code",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Dt Code"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
               }
             }
           },
@@ -499,6 +569,7 @@
     "/api/v1/transformers": {
       "get": {
         "tags": [
+          "Transformers & Hierarchy",
           "Transformers"
         ],
         "summary": "List Transformers",
@@ -559,6 +630,7 @@
     "/api/v1/hierarchy": {
       "get": {
         "tags": [
+          "Transformers & Hierarchy",
           "Hierarchy"
         ],
         "summary": "Get Network Hierarchy",
@@ -663,95 +735,13 @@
         }
       }
     },
-    "/api/v1/meters/export/csv": {
+    "/api/v1/analytics/grid-overview": {
       "get": {
         "tags": [
-          "Meters"
+          "Analytics"
         ],
-        "summary": "Export Meters Csv",
-        "operationId": "export_meters_csv_api_v1_meters_export_csv_get",
-        "parameters": [
-          {
-            "name": "q",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Q"
-            }
-          },
-          {
-            "name": "make",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Make"
-            }
-          },
-          {
-            "name": "phase_type",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Phase Type"
-            }
-          },
-          {
-            "name": "install_status",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Install Status"
-            }
-          },
-          {
-            "name": "dt_code",
-            "in": "query",
-            "required": false,
-            "schema": {
-              "anyOf": [
-                {
-                  "type": "string"
-                },
-                {
-                  "type": "null"
-                }
-              ],
-              "title": "Dt Code"
-            }
-          }
-        ],
+        "summary": "Get Grid Overview",
+        "operationId": "get_grid_overview_api_v1_analytics_grid_overview_get",
         "responses": {
           "200": {
             "description": "Successful Response",
@@ -760,13 +750,24 @@
                 "schema": {}
               }
             }
-          },
-          "422": {
-            "description": "Validation Error",
+          }
+        }
+      }
+    },
+    "/dashboard": {
+      "get": {
+        "tags": [
+          "Dashboard"
+        ],
+        "summary": "Serve Dashboard",
+        "operationId": "serve_dashboard_dashboard_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
             "content": {
-              "application/json": {
+              "text/html": {
                 "schema": {
-                  "$ref": "#/components/schemas/HTTPValidationError"
+                  "type": "string"
                 }
               }
             }
@@ -774,13 +775,34 @@
         }
       }
     },
-    "/api/v1/analytics/grid-overview": {
+    "/api/v1/health": {
       "get": {
         "tags": [
-          "Analytics"
+          "System"
         ],
-        "summary": "Get Grid Overview",
-        "operationId": "get_grid_overview_api_v1_analytics_grid_overview_get",
+        "summary": "Health Check",
+        "operationId": "health_check_api_v1_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/sync": {
+      "post": {
+        "tags": [
+          "System"
+        ],
+        "summary": "Trigger Sync",
+        "operationId": "trigger_sync_api_v1_sync_post",
         "responses": {
           "200": {
             "description": "Successful Response",
